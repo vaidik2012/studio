@@ -3,7 +3,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
-import { onPlayerJoin, isHost, setState, myPlayer, getState, rpc, onRPC } from 'playroomkit';
+import { onPlayerJoin, isHost, setState, myPlayer, getState, rpc } from 'playroomkit';
 import { HUD } from './HUD';
 import { EmoteWheel } from './EmoteWheel';
 import { PlayerState, Bullet, GameMode } from '@/lib/game/types';
@@ -81,7 +81,6 @@ export function GameView() {
     scene.add(effectsGroup.current);
     scene.add(targetsGroup.current);
 
-    // Track players manually as some SDK versions might not export getPlayers()
     onPlayerJoin((player) => {
       playersRef.current.push(player);
       player.onQuit(() => {
@@ -89,7 +88,8 @@ export function GameView() {
       });
     });
 
-    onRPC('shoot', (data: Bullet) => {
+    // Use rpc.register for handling custom RPC events
+    rpc.register('shoot', (data: Bullet) => {
       const bulletGeo = new THREE.SphereGeometry(5);
       const bulletMat = new THREE.MeshBasicMaterial({ color: data.color });
       const bulletMesh = new THREE.Mesh(bulletGeo, bulletMat);
@@ -98,7 +98,7 @@ export function GameView() {
       gameLoopState.current.bullets.push({ ...data, mesh: bulletMesh, createdAt: Date.now() });
     });
 
-    onRPC('ability_shockwave', (data: { x: number, z: number, color: string }) => {
+    rpc.register('ability_shockwave', (data: { x: number, z: number, color: string }) => {
       const ringGeo = new THREE.TorusGeometry(10, 2, 16, 100);
       const ringMat = new THREE.MeshBasicMaterial({ color: data.color, transparent: true, opacity: 0.8 });
       const ringMesh = new THREE.Mesh(ringGeo, ringMat);
@@ -108,7 +108,7 @@ export function GameView() {
       gameLoopState.current.effects.push({ mesh: ringMesh, createdAt: Date.now(), type: 'shockwave' });
     });
 
-    onRPC('ability_dash', (data: { x: number, z: number, color: string }) => {
+    rpc.register('ability_dash', (data: { x: number, z: number, color: string }) => {
       const dashGeo = new THREE.BoxGeometry(50, 50, 50);
       const dashMat = new THREE.MeshBasicMaterial({ color: data.color, transparent: true, opacity: 0.5 });
       const dashMesh = new THREE.Mesh(dashGeo, dashMat);
@@ -117,7 +117,7 @@ export function GameView() {
       gameLoopState.current.effects.push({ mesh: dashMesh, createdAt: Date.now(), type: 'dash_trail' });
     });
 
-    onRPC('hit_target', (data: { targetId: string }) => {
+    rpc.register('hit_target', (data: { targetId: string }) => {
        const target = scene.getObjectByName(data.targetId);
        if (target && target instanceof THREE.Mesh) {
          (target.material as THREE.MeshStandardMaterial).color.set(0xff0000);
@@ -246,7 +246,7 @@ export function GameView() {
             color: weapon.color
           };
           
-          rpc('shoot', bullet);
+          rpc.call('shoot', bullet);
 
           if (isTraining) {
             const raycaster = new THREE.Raycaster();
@@ -255,22 +255,21 @@ export function GameView() {
             const intersects = raycaster.intersectObjects(scene.children, true);
             const hit = intersects.find(i => i.object.name.startsWith('target_board'));
             if (hit) {
-              rpc('hit_target', { targetId: hit.object.name });
+              rpc.call('hit_target', { targetId: hit.object.name });
             }
           }
         }
       }
 
-      // Ability logic
       if (gameLoopState.current.keys[binds.ability] && now - gameLoopState.current.lastAbility > 10000) {
         gameLoopState.current.lastAbility = now;
         if (state.charId === 'void_runner') {
           const dashDist = 400;
           state.x += Math.sin(state.angle) * dashDist;
           state.z += Math.cos(state.angle) * dashDist;
-          rpc('ability_dash', { x: state.x, z: state.z, color: char.color });
+          rpc.call('ability_dash', { x: state.x, z: state.z, color: char.color });
         } else {
-          rpc('ability_shockwave', { x: state.x, z: state.z, color: char.color });
+          rpc.call('ability_shockwave', { x: state.x, z: state.z, color: char.color });
         }
       }
 
