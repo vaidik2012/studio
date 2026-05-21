@@ -89,7 +89,7 @@ export function GameView() {
     });
 
     // Handle custom RPC events using standard register pattern
-    const rpc = Playroom.rpc || (Playroom as any).RPC;
+    const rpc = (Playroom as any).RPC || Playroom.rpc;
     if (rpc) {
       rpc.register('shoot', (data: Bullet) => {
         const bulletGeo = new THREE.SphereGeometry(5);

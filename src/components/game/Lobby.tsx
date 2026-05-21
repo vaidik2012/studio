@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { myPlayer, isHost, setState, getState, insertCoin } from 'playroomkit';
+import * as Playroom from 'playroomkit';
 import { CHARACTERS, WEAPONS, MAPS, EMOTES } from '@/lib/game/constants';
 import { GameMode } from '@/lib/game/types';
 import { Button } from '@/components/ui/button';
@@ -32,23 +32,29 @@ export function Lobby({ onStart }: LobbyProps) {
   const [joinCode, setJoinCode] = useState('');
 
   useEffect(() => {
-    const code = window.location.hash.replace('#', '') || 'LOCAL';
-    setPartyCode(code);
+    // Check if we are in a playroom session
+    const checkSession = () => {
+      const hash = window.location.hash.replace('#', '');
+      setPartyCode(hash || 'LOCAL');
+    };
+    checkSession();
+    window.addEventListener('hashchange', checkSession);
+    return () => window.removeEventListener('hashchange', checkSession);
   }, []);
 
   const handleJoin = async () => {
-    const player = myPlayer();
+    const player = Playroom.myPlayer();
     if (player && profile) {
-      if (isHost()) {
-        setState('gameMode', selectedMode);
+      if (Playroom.isHost()) {
+        Playroom.setState('gameMode', selectedMode);
         if (selectedMode === 'training') {
-          setState('mapIndex', MAPS.findIndex(m => m.theme === 'training'));
+          Playroom.setState('mapIndex', MAPS.findIndex(m => m.theme === 'training'));
         } else if (selectedMode === 'custom_1v1') {
-          setState('mapIndex', MAPS.findIndex(m => m.theme === 'duel'));
+          Playroom.setState('mapIndex', MAPS.findIndex(m => m.theme === 'duel'));
         } else {
           const playableMaps = MAPS.filter(m => m.theme !== 'training' && m.theme !== 'duel');
           const randomMap = playableMaps[Math.floor(Math.random() * playableMaps.length)];
-          setState('mapIndex', MAPS.indexOf(randomMap));
+          Playroom.setState('mapIndex', MAPS.indexOf(randomMap));
         }
       }
 
