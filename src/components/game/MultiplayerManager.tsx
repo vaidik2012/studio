@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { insertCoin, onPlayerJoin, isHost, getPlayer, getState, setState, myPlayer } from 'playroom-kit';
+import { insertCoin, onPlayerJoin, isHost, getPlayer, getState, setState, myPlayer } from 'playroomkit';
 
 export function useMultiplayer() {
   const [initialized, setInitialized] = useState(false);

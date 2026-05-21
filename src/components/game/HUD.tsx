@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EMOTES } from '@/lib/game/constants';
 import { Zap, Target, Swords, Users, Trophy } from 'lucide-react';
-import { getState } from 'playroom-kit';
+import { getState } from 'playroomkit';
 
 interface HUDProps {
   health: number;

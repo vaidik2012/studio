@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { myPlayer, isHost, setState, getState, insertCoin } from 'playroom-kit';
+import { myPlayer, isHost, setState, getState, insertCoin } from 'playroomkit';
 import { CHARACTERS, WEAPONS, MAPS, EMOTES } from '@/lib/game/constants';
 import { GameMode } from '@/lib/game/types';
 import { Button } from '@/components/ui/button';

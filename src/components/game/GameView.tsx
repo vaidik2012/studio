@@ -3,7 +3,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
-import { onPlayerJoin, isHost, setState, myPlayer, getState, rpc, onRPC, insertBot, getPlayers } from 'playroom-kit';
+import { onPlayerJoin, isHost, setState, myPlayer, getState, rpc, onRPC } from 'playroomkit';
 import { HUD } from './HUD';
 import { EmoteWheel } from './EmoteWheel';
 import { PlayerState, Bullet, GameMode } from '@/lib/game/types';
@@ -33,6 +33,7 @@ export function GameView() {
   const effectsGroup = useRef<THREE.Group>(new THREE.Group());
   const targetsGroup = useRef<THREE.Group>(new THREE.Group());
   
+  const playersRef = useRef<any[]>([]);
   const db = useFirestore();
   const { user } = useUser();
 
@@ -79,6 +80,14 @@ export function GameView() {
     scene.add(bulletsGroup.current);
     scene.add(effectsGroup.current);
     scene.add(targetsGroup.current);
+
+    // Track players manually as some SDK versions might not export getPlayers()
+    onPlayerJoin((player) => {
+      playersRef.current.push(player);
+      player.onQuit(() => {
+        playersRef.current = playersRef.current.filter(p => p.id !== player.id);
+      });
+    });
 
     onRPC('shoot', (data: Bullet) => {
       const bulletGeo = new THREE.SphereGeometry(5);
@@ -305,7 +314,6 @@ export function GameView() {
       }
 
       if (isHost()) {
-        manageBots(gameMode);
         checkWinConditions(gameMode);
         
         if (now - gameLoopState.current.lastDifficultyCheck > 30000) {
@@ -327,31 +335,9 @@ export function GameView() {
       setMe(state);
     };
 
-    const manageBots = (mode: GameMode) => {
-      if (mode === 'training') return;
-      if (gameLoopState.current.botsInitialized) return;
-
-      const players = getPlayers();
-      const playerCount = players.length;
-      const targetCount = mode === 'custom_1v1' ? 2 : 8;
-
-      if (playerCount < targetCount) {
-        const needed = targetCount - playerCount;
-        for (let i = 0; i < needed; i++) {
-          const botName = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
-          insertBot({ 
-            name: botName, 
-            isBot: true,
-            team: Math.random() > 0.5 ? 'blue' : 'yellow'
-          });
-        }
-      }
-      gameLoopState.current.botsInitialized = true;
-    };
-
     const checkWinConditions = (mode: GameMode) => {
        if (gameLoopState.current.matchEnded) return;
-       const players = getPlayers();
+       const players = playersRef.current;
        if (mode === 'custom_1v1' && players.length >= 1) {
           const winner = players.find(p => (p.getPublicState() as PlayerState).kills >= 10);
           if (winner) {
@@ -364,11 +350,11 @@ export function GameView() {
 
     return () => {
       document.removeEventListener('pointerlockchange', handlePointerLockChange);
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('keyup', handleKeyUp);
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mousedown', handleMouseDown);
+      window.addEventListener('mouseup', handleMouseUp);
     };
   }, [isPaused, isDead, showEmoteWheel]);
 
