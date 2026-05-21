@@ -32,7 +32,6 @@ export function Lobby({ onStart }: LobbyProps) {
   const [joinCode, setJoinCode] = useState('');
 
   useEffect(() => {
-    // Check if we are in a playroom session
     const checkSession = () => {
       const hash = window.location.hash.replace('#', '');
       setPartyCode(hash || 'LOCAL');

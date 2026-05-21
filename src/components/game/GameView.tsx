@@ -88,8 +88,8 @@ export function GameView() {
       });
     });
 
-    // Handle custom RPC events using standard register pattern
-    const rpc = (Playroom as any).RPC || Playroom.rpc;
+    // Handle RPC registration safely
+    const rpc = (Playroom as any).RPC || (Playroom as any).rpc;
     if (rpc) {
       rpc.register('shoot', (data: Bullet) => {
         const bulletGeo = new THREE.SphereGeometry(5);
@@ -249,6 +249,7 @@ export function GameView() {
             color: weapon.color
           };
           
+          const rpc = (Playroom as any).RPC || (Playroom as any).rpc;
           if (rpc) rpc.call('shoot', bullet);
 
           if (isTraining) {
@@ -266,6 +267,7 @@ export function GameView() {
 
       if (gameLoopState.current.keys[binds.ability] && now - gameLoopState.current.lastAbility > 10000) {
         gameLoopState.current.lastAbility = now;
+        const rpc = (Playroom as any).RPC || (Playroom as any).rpc;
         if (state.charId === 'void_runner') {
           const dashDist = 400;
           state.x += Math.sin(state.angle) * dashDist;

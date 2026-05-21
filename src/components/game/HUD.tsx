@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EMOTES } from '@/lib/game/constants';
 import { Zap, Target, Swords, Users, Trophy } from 'lucide-react';
-import { getState } from 'playroomkit';
+import * as Playroom from 'playroomkit';
 
 interface HUDProps {
   health: number;
@@ -25,7 +25,7 @@ export function HUD({ health, maxHealth, kills, deaths, ammo, maxAmmo, weaponNam
   const [prevKills, setPrevKills] = useState(0);
   const [showKillStreak, setShowKillStreak] = useState(false);
   const [activeEmote, setActiveEmote] = useState<string | null>(null);
-  const gameMode = (getState('gameMode') || 'tdm_unranked') as string;
+  const gameMode = (Playroom.getState('gameMode') || 'tdm_unranked') as string;
 
   useEffect(() => {
     if (kills > prevKills && kills > 0) {
