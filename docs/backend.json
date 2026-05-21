@@ -1,0 +1,33 @@
+
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Store player statistics and account information.",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string", "description": "Unique display name." },
+        "xp": { "type": "number", "description": "Experience points." },
+        "level": { "type": "number", "description": "Current player level." },
+        "coins": { "type": "number", "description": "In-game currency." },
+        "rank": { "type": "string", "enum": ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Master"], "description": "Competitive rank." },
+        "kills": { "type": "number", "description": "Total kills across all sessions." },
+        "deaths": { "type": "number", "description": "Total deaths across all sessions." }
+      },
+      "required": ["username", "xp", "level", "coins", "rank"]
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile data stored by UID."
+    },
+    "/usernames/{username}": {
+      "schema": { "type": "object", "properties": { "uid": { "type": "string" } } },
+      "description": "Mapping of unique usernames to UIDs."
+    }
+  }
+}
